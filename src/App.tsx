@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, KeyboardEvent } from 'react';
 import Papa from 'papaparse';
 import { beybladeData } from './data/beyblades';
 
@@ -14,7 +14,30 @@ interface Combo {
   month: string;
 }
 
+const parseDate = (dateStr: string): Date => {
+    if (!dateStr || typeof dateStr !== 'string') return new Date(0);
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return new Date(0);
+
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+
+    if (isNaN(day) || isNaN(month) || isNaN(year)) {
+        return new Date(0);
+    }
+
+    const fullYear = year < 100 ? 2000 + year : year;
+
+    const d = new Date(fullYear, month, day);
+    if (isNaN(d.getTime())) {
+        return new Date(0);
+    }
+    return d;
+};
+
 export default function App() {
+  const [inputValue, setInputValue] = useState('');
   const [query, setQuery] = useState('');
   const [combos, setCombos] = useState<Combo[]>([]);
   const [filteredCombos, setFilteredCombos] = useState<Combo[]>([]);
@@ -63,6 +86,13 @@ export default function App() {
     const results = combos.filter(item => 
       item.combo.toLowerCase().includes(lowerCaseQuery)
     );
+
+    results.sort((a, b) => {
+      const dateA = parseDate(a.date);
+      const dateB = parseDate(b.date);
+      return dateB.getTime() - dateA.getTime();
+    });
+
     setFilteredCombos(results);
   }, [query, combos]);
 
@@ -104,6 +134,16 @@ export default function App() {
 
   }, [combos, query]);
 
+  const handleSearch = () => {
+    setQuery(inputValue);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans">
       <main className="max-w-4xl mx-auto p-4 md:p-8">
@@ -113,14 +153,22 @@ export default function App() {
         </header>
 
         <div className="relative mb-8">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter a Beyblade part (e.g., Dran Sword, Flat, 3-60)..."
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          />
-        </div>
+           <input
+             type="text"
+             value={inputValue}
+             onChange={(e) => setInputValue(e.target.value)}
+             onKeyDown={handleKeyDown}
+             placeholder="Enter a Beyblade part (e.g., Dran Sword, Flat, 3-60)..."
+             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all pr-12"
+           />
+           <button 
+             onClick={handleSearch}
+             className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-white"
+             aria-label="Search"
+           >
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+           </button>
+         </div>
 
         <div className="my-8">
           <h2 className="text-2xl font-bold mb-4">Top Combos</h2>
