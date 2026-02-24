@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
-import { beybladeData } from './data/beyblades';
+
 
 interface Combo {
   place: string;
@@ -16,42 +16,11 @@ interface Combo {
 
 export default function App() {
   const [query, setQuery] = useState('');
-  const [combos, setCombos] = useState<Combo[]>([]);
+
   const [filteredCombos, setFilteredCombos] = useState<Combo[]>([]);
   const [topCombos, setTopCombos] = useState<{ title: string; combos: { combo: string; count: number; }[] }[]>([]);
 
-  useEffect(() => {
-    const parseData = () => {
-      Papa.parse(beybladeData, {
-        complete: (result) => {
-          const parsedCombos: Combo[] = [];
-          const dataRows = result.data.slice(3);
-          dataRows.forEach((row: any) => {
-            if (!Array.isArray(row)) return;
 
-            const month = row.find(cell => typeof cell === 'string' && ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].some(m => cell.startsWith(m))) || '';
-
-            if (row[0] && row[1] && typeof row[0] === 'string' && row[0].trim() !== '') {
-                parsedCombos.push({ place: '1st', combo: row[0].trim(), date: row[1].trim(), month });
-            }
-            if (row[3] && row[4] && typeof row[3] === 'string' && row[3].trim() !== '') {
-                parsedCombos.push({ place: '2nd', combo: row[3].trim(), date: row[4].trim(), month });
-            }
-            if (row[6] && row[7] && typeof row[6] === 'string' && row[6].trim() !== '') {
-                parsedCombos.push({ place: '3rd', combo: row[6].trim(), date: row[7].trim(), month });
-            }
-            if (row[9] && typeof row[9] === 'string' && row[9].trim() !== '') {
-                const date = (row[10] && String(row[10]).includes('/')) ? String(row[10]).trim() : (row[7] || row[4] || row[1] || '').trim();
-                parsedCombos.push({ place: '4th', combo: row[9].trim(), date: date, month });
-            }
-        });
-          setCombos(parsedCombos);
-        }
-      });
-    };
-
-    parseData();
-  }, []);
 
   useEffect(() => {
     if (query.trim() === '') {
@@ -59,50 +28,24 @@ export default function App() {
       return;
     }
 
-    const lowerCaseQuery = query.toLowerCase();
-    const results = combos.filter(item => 
-      item.combo.toLowerCase().includes(lowerCaseQuery)
-    );
-    setFilteredCombos(results);
-  }, [query, combos]);
+    const fetchFilteredCombos = async () => {
+      const response = await fetch(`/api/combos?part=${query}`);
+      const data = await response.json();
+      setFilteredCombos(data);
+    };
+
+    fetchFilteredCombos();
+  }, [query]);
 
   useEffect(() => {
-    if (combos.length === 0) return;
+    const fetchTopCombos = async () => {
+      const response = await fetch(`/api/top-combos?part=${query}`);
+      const data = await response.json();
+      setTopCombos(data);
+    };
 
-    const lowerCaseQuery = query.toLowerCase();
-    const combosToAnalyze = query.trim() === '' ? combos : combos.filter(item => 
-      item.combo.toLowerCase().includes(lowerCaseQuery)
-    );
-
-    // Most Repeated
-    const comboCounts: { [key: string]: number } = {};
-    combosToAnalyze.forEach(c => {
-      comboCounts[c.combo] = (comboCounts[c.combo] || 0) + 1;
-    });
-
-    const sortedRepeated = Object.entries(comboCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([combo, count]) => ({ combo, count }));
-
-    // Most Successful (1st place)
-    const successfulCombos = combosToAnalyze.filter(c => c.place === '1st');
-    const successfulCounts: { [key: string]: number } = {};
-    successfulCombos.forEach(c => {
-      successfulCounts[c.combo] = (successfulCounts[c.combo] || 0) + 1;
-    });
-
-    const sortedSuccessful = Object.entries(successfulCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([combo, count]) => ({ combo, count }));
-
-    setTopCombos([
-        { title: 'Most Repeated', combos: sortedRepeated },
-        { title: 'Most Successful (1st Place)', combos: sortedSuccessful },
-    ]);
-
-  }, [combos, query]);
+    fetchTopCombos();
+  }, [query]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans">
