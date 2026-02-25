@@ -136,6 +136,15 @@ export default function App() {
 
   const handleSearch = () => {
     setQuery(inputValue);
+    if (inputValue.trim() !== '') {
+      fetch('/api/log-search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: inputValue }),
+      });
+    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
