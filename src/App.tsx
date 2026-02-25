@@ -157,8 +157,8 @@ export default function App() {
     <div className="min-h-screen bg-gray-900 text-white font-sans">
       <main className="max-w-4xl mx-auto p-4 md:p-8">
         <header className="text-center my-8">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">Beyblade X Combo Finder</h1>
-          <p className="text-gray-400 mt-2">Find the most competitive combos for any part.</p>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">Beyblade X Combo Finder by Deeh</h1>
+          <p className="text-gray-400 mt-2">Encuentra los combos más competitivos para cualquier pieza de Beyblade X.</p>
         </header>
 
         <div className="relative mb-8">
@@ -167,7 +167,7 @@ export default function App() {
              value={inputValue}
              onChange={(e) => setInputValue(e.target.value)}
              onKeyDown={handleKeyDown}
-             placeholder="Enter a Beyblade part (e.g., Dran Sword, Flat, 3-60)..."
+             placeholder="Ingresa una parte de la linea Beyblade X (ej: Dran Sword, Flat, 3-60)..."
              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all pr-12"
            />
            <button 
